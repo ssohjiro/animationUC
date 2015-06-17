@@ -19,16 +19,20 @@ auc.tween = function( el, destStyles ) {
 	'use strict';
 
 	var startTime = Date.now();
-	var startStyles = getStyleValues( destStyles );
-	var duration
+	var startStyles = getStartStyles( destStyles );
 
+	var duration
 };
 
-function getStyleValues( styles ) {
+function getStartStyles( el, styles ) {
 
 	var styleValues = {};
 
-	_.each( styles, function( val, key ) {
+	var keys = _.keys( styles );
+
+	_.each( keys, function( val ) {
+
+		
 
 		var pos = el.style[ key ];
 		if( _.isString( pos ) ) {
