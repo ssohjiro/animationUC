@@ -1,8 +1,8 @@
 # animationUC
-Light weight javascript library that support a requestAnimationFrame and easing functions for performance
+Light weight javascript library that support the requestAnimationFrame and easing functions for performance
 
 # dependencies
-easing function: https://github.com/component/ease/blob/master/package.json
+easing function: https://github.com/component/ease
 
 # Special thanks
 https://gist.github.com/desandro/1866474
