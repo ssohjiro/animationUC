@@ -99,6 +99,8 @@
 
 			logger.debug( cur.scrollTop );
 			el.scrollTop = cur.scrollTop;
+
+			if( cur.scrollTop === endPos.scrollTop ) stop = true;
 		}
 
 		function animate() {
