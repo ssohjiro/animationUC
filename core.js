@@ -63,7 +63,7 @@
 
 	var defaultOptions = {
 		duration: 500
-	}
+	};
 
 	aniUC.tween = function( el, endPos, options ) {
 
@@ -109,31 +109,6 @@
 
 		animate();
 	};
-
-
-	_getStartStyles = function( el, styles ) {
-
-		var styleValues = {};
-
-		var keys = _.keys( styles );
-
-		_.each( keys, function( val ) {
-
-			var pos = el.style[ key ];
-			if( _.isString( pos ) ) {
-				pos = Number( pos.replace('px', '' ));
-			}
-
-			if( ! _.isNumber( pos ) ) {
-				logger.error( 'key: ' + key + ' / val: ' + val );
-				return;
-			}
-				
-			styleValues[ key ] = startPos;
-		});
-
-		return styleValues;
-	};
-
+	
 	return aniUC;
 }));
