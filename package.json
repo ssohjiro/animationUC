@@ -1,9 +1,45 @@
 {
+  "name": "animation-uc",
+  "main": "animation-uc.js",
   "dependencies": {
-    "browserify": "^10.2.4",
     "ease-component": "^1.0.0",
     "jquery": "^2.1.4",
     "loglevel": "^1.3.1",
+    "raf-uc": "^0.0.1",
     "underscore": "^1.8.3"
-  }
+  },
+  "version": "0.0.1",
+  "description": "Light weight javascript library that support the requestAnimationFrame and easing functions for performance",
+  "directories": {
+    "example": "examples"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "not yet"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ssohjiro/animationUC.git"
+  },
+  "keywords": [
+    "requestAnimationFrame",
+    "animationLibrary",
+    "ease"
+  ],
+  "author": {
+    "name": "ssohjiro",
+    "email": "ssohjiro@gmail.com",
+    "url": "http://utopos.me/"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ssohjiro/animationUC/issues"
+  },
+  "homepage": "https://github.com/ssohjiro/animationUC",
+  "readme": "# animationUC\nLight weight javascript library that support the requestAnimationFrame and easing functions for performance\n\n# dependencies\neasing function: https://github.com/component/ease\n\n# Special thanks\nhttps://gist.github.com/desandro/1866474\n",
+  "readmeFilename": "README.md",
+  "gitHead": "1cfe9ba179d399147a3eabfbb06ce6ef715e2deb",
+  "_id": "animation-uc@0.0.1",
+  "_shasum": "b7be8b946da24cd2639258bda6d2c4e91877054c",
+  "_from": "animation-uc@*"
 }

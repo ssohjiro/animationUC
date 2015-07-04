@@ -76,6 +76,10 @@
 		_.each( endPos, function( val, key ) {
 			if( key === 'scrollTop' ) {
 				startPos.scrollTop = el.scrollTop;
+			} else if(['x','y','z'].indexOf( key ) > -1 ) {
+				// transform's translate3d style
+			} else if(['top'].indexOf( key ) > -1 ) {
+				startPos.top = Number( el.style.top.replace('px','') || 0 );
 			}
 		});
 
@@ -90,17 +94,50 @@
 			if( now - startTime >= options.duration ) stop = true;
 
 			if( stop ) {
-				cur.scrollTop = endPos.scrollTop;
+
+				_.each( startPos, function( val, key ) {
+					if( key === 'scrollTop' ) {
+						cur.scrollTop = endPos.scrollTop;
+					} else if(['x','y','z'].indexOf( key ) > -1 ) {
+						// transform's translate3d style
+					} else if(['top'].indexOf( key ) > -1 ) {
+						cur.top = endPos.top;
+					}
+				});
+
+				//cur.scrollTop = endPos.scrollTop;
+
 			} else {
 				var p = ( now - startTime ) / options.duration;
-				var val = ease.outQuad( p );
-				cur.scrollTop = startPos.scrollTop + ( endPos.scrollTop - startPos.scrollTop ) * val;
+				var r = ease.outQuad( p );
+
+				_.each( startPos, function( val, key ) {
+					if( key === 'scrollTop' ) {
+						cur.scrollTop = val + ( endPos.scrollTop - val )*r;
+					} else if(['x','y','z'].indexOf( key ) > -1 ) {
+						// transform's translate3d style
+					} else if(['top'].indexOf( key ) > -1 ) {
+						cur.top = val + ( endPos.top - val ) * r;
+					}
+				});
+
+				//cur.scrollTop = startPos.scrollTop + ( endPos.scrollTop - startPos.scrollTop ) * r;
 			}
 
 			logger.debug( cur.scrollTop );
-			el.scrollTop = cur.scrollTop;
+			_.each( startPos, function( val, key ) {
+				if( key === 'scrollTop' ) {
+					el.scrollTop = cur.scrollTop;
+				} else if(['x','y','z'].indexOf( key ) > -1 ) {
+					// transform's translate3d style
+				} else if(['top'].indexOf( key ) > -1 ) {
+					el.style.top = cur.top + 'px';
+				}
+			});
+			//el.scrollTop = cur.scrollTop;
 
-			if( cur.scrollTop === endPos.scrollTop ) stop = true;
+			if( cur.scrollTop === endPos.scrollTop ) delete startPos.scrollTop;
+			if( cur.top === endPos.top ) delete startPos.top;
 		}
 
 		function animate() {
