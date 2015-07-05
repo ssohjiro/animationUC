@@ -61,7 +61,7 @@
 		return this;
 	};
 
-	var cssAttrs = [ 'top','height','fontSize' ];
+	var cssAttrs = [ 'top','height','fontSize','lineHeight' ];
 
 	var defaultOptions = {
 		duration: 500
@@ -83,6 +83,10 @@
 			} else if( cssAttrs.indexOf( key ) > -1 ) {
 				var computedStyle = getComputedStyle( el );
 				startPos[ key ] = Number( computedStyle[ key ].replace('px','') || 0 );
+
+				if( typeof endPos[ key ] === 'string' ) {
+					endPos[key] = Number( endPos[ key ].replace('px','') );
+				}
 			}
 		});
 
@@ -131,7 +135,6 @@
 				//cur.scrollTop = startPos.scrollTop + ( endPos.scrollTop - startPos.scrollTop ) * r;
 			}
 
-			logger.debug( cur.scrollTop );
 			_.each( startPos, function( val, key ) {
 				if( key === 'scrollTop' ) {
 					el.scrollTop = cur.scrollTop;
