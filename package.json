@@ -5,10 +5,10 @@
     "ease-component": "^1.0.0",
     "jquery": "^2.1.4",
     "loglevel": "^1.3.1",
-    "raf-uc": "^0.0.1",
+    "raf-uc": "^0.0.2",
     "underscore": "^1.8.3"
   },
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "Light weight javascript library that support the requestAnimationFrame and easing functions for performance",
   "directories": {
     "example": "examples"

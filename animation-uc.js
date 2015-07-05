@@ -61,6 +61,8 @@
 		return this;
 	};
 
+	var cssAttrs = [ 'top','height','fontSize' ];
+
 	var defaultOptions = {
 		duration: 500
 	};
@@ -78,7 +80,7 @@
 				startPos.scrollTop = el.scrollTop;
 			} else if(['x','y','z'].indexOf( key ) > -1 ) {
 				// transform's translate3d style
-			} else if(['top','height'].indexOf( key ) > -1 ) {
+			} else if( cssAttrs.indexOf( key ) > -1 ) {
 				var computedStyle = getComputedStyle( el );
 				startPos[ key ] = Number( computedStyle[ key ].replace('px','') || 0 );
 			}
@@ -105,7 +107,7 @@
 						cur.scrollTop = endPos.scrollTop;
 					} else if(['x','y','z'].indexOf( key ) > -1 ) {
 						// transform's translate3d style
-					} else if(['top','height'].indexOf( key ) > -1 ) {
+					} else if( cssAttrs.indexOf( key ) > -1 ) {
 						cur[ key ] = endPos[ key ];
 					}
 				});
@@ -121,7 +123,7 @@
 						cur.scrollTop = val + ( endPos.scrollTop - val )*r;
 					} else if(['x','y','z'].indexOf( key ) > -1 ) {
 						// transform's translate3d style
-					} else if(['top','height'].indexOf( key ) > -1 ) {
+					} else if( cssAttrs.indexOf( key ) > -1 ) {
 						cur[ key ] = val + ( endPos[ key ] - val ) * r;
 					}
 				});
@@ -135,7 +137,7 @@
 					el.scrollTop = cur.scrollTop;
 				} else if(['x','y','z'].indexOf( key ) > -1 ) {
 					// transform's translate3d style
-				} else if(['top','height'].indexOf( key ) > -1 ) {
+				} else if( cssAttrs.indexOf( key ) > -1 ) {
 					el.style[ key ] = cur[ key ] + 'px';
 				}
 			});
