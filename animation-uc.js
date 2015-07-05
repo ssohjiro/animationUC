@@ -18,7 +18,7 @@
 	// Set up Backbone appropriately for the environment. Start with AMD.
 	if (typeof define === 'function' && define.amd) {
 
-		define(['jquery', 'rafUC', 'ease-component', 'underscore', 'loglevel', 'exports'],
+		define(['jquery', 'raf-uc', 'ease-component', 'underscore', 'loglevel', 'exports'],
 		function($, rafUC, ease, _, logger, exports) {
 			// Export global even in AMD case in case this script is loaded with
 			// others that may still expect a global aniUC.
@@ -32,7 +32,7 @@
 	} else if (typeof exports !== 'undefined') {
 
 		var $ = require('jquery');
-		var rafUC = require('rafUC');
+		var rafUC = require('raf-uc');
 		var ease = require('ease-component');
 		var _ = require('underscore');
 		var logger = require('loglevel');
@@ -67,9 +67,9 @@
 
 	aniUC.tween = function( el, endPos, options ) {
 
-		options = _.extend({}, defaultOptions, options );
-
 		'use strict';
+
+		options = _.extend({}, defaultOptions, options );
 
 		var startPos = {};
 
@@ -78,20 +78,25 @@
 				startPos.scrollTop = el.scrollTop;
 			} else if(['x','y','z'].indexOf( key ) > -1 ) {
 				// transform's translate3d style
-			} else if(['top'].indexOf( key ) > -1 ) {
-				startPos.top = Number( el.style.top.replace('px','') || 0 );
+			} else if(['top','height'].indexOf( key ) > -1 ) {
+				var computedStyle = getComputedStyle( el );
+				startPos[ key ] = Number( computedStyle[ key ].replace('px','') || 0 );
 			}
 		});
 
 		var startTime = Date.now();
 		var stop = false;
+		var complete = false;
 
 		function draw() {
 
 			var cur = {};
 			var now = Date.now();
 
-			if( now - startTime >= options.duration ) stop = true;
+			if( now - startTime >= options.duration ) {
+				stop = true;
+				complete = true;
+			}
 
 			if( stop ) {
 
@@ -100,8 +105,8 @@
 						cur.scrollTop = endPos.scrollTop;
 					} else if(['x','y','z'].indexOf( key ) > -1 ) {
 						// transform's translate3d style
-					} else if(['top'].indexOf( key ) > -1 ) {
-						cur.top = endPos.top;
+					} else if(['top','height'].indexOf( key ) > -1 ) {
+						cur[ key ] = endPos[ key ];
 					}
 				});
 
@@ -116,8 +121,8 @@
 						cur.scrollTop = val + ( endPos.scrollTop - val )*r;
 					} else if(['x','y','z'].indexOf( key ) > -1 ) {
 						// transform's translate3d style
-					} else if(['top'].indexOf( key ) > -1 ) {
-						cur.top = val + ( endPos.top - val ) * r;
+					} else if(['top','height'].indexOf( key ) > -1 ) {
+						cur[ key ] = val + ( endPos[ key ] - val ) * r;
 					}
 				});
 
@@ -130,8 +135,8 @@
 					el.scrollTop = cur.scrollTop;
 				} else if(['x','y','z'].indexOf( key ) > -1 ) {
 					// transform's translate3d style
-				} else if(['top'].indexOf( key ) > -1 ) {
-					el.style.top = cur.top + 'px';
+				} else if(['top','height'].indexOf( key ) > -1 ) {
+					el.style[ key ] = cur[ key ] + 'px';
 				}
 			});
 			//el.scrollTop = cur.scrollTop;
@@ -141,7 +146,14 @@
 		}
 
 		function animate() {
+
+			if( complete ) {
+				if( options.complete && typeof options.complete === 'function' ) {
+					options.complete( el );
+				}
+			}
 			if( stop ) return;
+
 			raf( animate );
 			draw();
 		}
