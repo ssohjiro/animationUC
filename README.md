@@ -1,3 +1,6 @@
+# Notice
+Now, this library is a just test version. Do not use!
+
 # animationUC
 Light weight javascript library that support the requestAnimationFrame and easing functions for performance
 
