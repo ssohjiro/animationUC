@@ -18,11 +18,11 @@
 	// Set up Backbone appropriately for the environment. Start with AMD.
 	if (typeof define === 'function' && define.amd) {
 
-		define(['jquery', 'raf-uc', 'ease-component', 'underscore', 'loglevel', 'exports'],
-		function($, rafUC, ease, _, logger, exports) {
+		define(['raf-uc', 'ease-component', 'underscore', 'loglevel', 'exports'],
+		function( rafUC, ease, _, logger, exports) {
 			// Export global even in AMD case in case this script is loaded with
 			// others that may still expect a global aniUC.
-			root.aniUC = factory(root, exports, $, rafUC.raf, rafUC.caf, ease, _, logger );
+			root.aniUC = factory(root, exports, rafUC.raf, rafUC.caf, ease, _, logger );
 		});
 
 
@@ -31,13 +31,12 @@
 	// Next for CommonJS.
 	} else if (typeof exports !== 'undefined') {
 
-		var $ = require('jquery');
 		var rafUC = require('raf-uc');
 		var ease = require('ease-component');
 		var _ = require('underscore');
 		var logger = require('loglevel');
 
-		factory(root, exports, $, rafUC.raf, rafUC.caf, ease, _, logger );
+		factory(root, exports, rafUC.raf, rafUC.caf, ease, _, logger );
 
 
 
@@ -48,7 +47,7 @@
 		root.aniUC = factory(root, {}, root.jQuery, root.rafUC.raf, root.rafUC.caf, root.ease, root._, root.logger );
 	}
 	
-}( function( root, aniUC, $, raf, caf, ease, _, logger ) {
+}( function( root, aniUC, raf, caf, ease, _, logger ) {
 
 	// Current version of the library. Keep in sync with `package.json`.
 	aniUC.VERSION = '0.0.1';
