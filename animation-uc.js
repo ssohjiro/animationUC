@@ -1,4 +1,4 @@
-//     animationUC.js 1.2.1
+//     animationUC.js 0.1.0
 
 //     (c) 2015 Byunghwa Yoo
 //     animationUC may be freely distributed under the MIT license.
@@ -18,11 +18,11 @@
 	// Set up Backbone appropriately for the environment. Start with AMD.
 	if (typeof define === 'function' && define.amd) {
 
-		define(['raf-uc', 'ease-component', 'underscore', 'loglevel', 'exports'],
-		function( rafUC, ease, _, logger, exports) {
+		define(['raf-uc', 'ease-component', 'underscore', 'exports'],
+		function( rafUC, easeComponent, _, exports) {
 			// Export global even in AMD case in case this script is loaded with
 			// others that may still expect a global aniUC.
-			root.aniUC = factory(root, exports, rafUC.raf, rafUC.caf, ease, _, logger );
+			root.aniUC = factory(root, exports, rafUC.raf, rafUC.caf, easeComponent, _ );
 		});
 
 
@@ -32,25 +32,23 @@
 	} else if (typeof exports !== 'undefined') {
 
 		var rafUC = require('raf-uc');
-		var ease = require('ease-component');
+		var easeComponent = require('ease-component');
 		var _ = require('underscore');
-		var logger = require('loglevel');
 
-		factory(root, exports, rafUC.raf, rafUC.caf, ease, _, logger );
+		factory(root, exports, rafUC.raf, rafUC.caf, easeComponent, _ );
 
 
 
 
 	// Finally, as a browser global.
 	} else {
-		root.logger = root.log;	// in case of loglevel
-		root.aniUC = factory(root, {}, root.rafUC.raf, root.rafUC.caf, root.ease, root._, root.logger );
+		root.aniUC = factory(root, {}, root.rafUC.raf, root.rafUC.caf, root.easeComponent, root._ );
 	}
 	
-}( function( root, aniUC, raf, caf, ease, _, logger ) {
+}( function( root, aniUC, raf, caf, easeComponent, _ ) {
 
 	// Current version of the library. Keep in sync with `package.json`.
-	aniUC.VERSION = '0.0.1';
+	aniUC.VERSION = '0.1.0';
 
 	// Save the previous value of the `Backbone` variable, so that it can be
 	// restored later on, if `noConflict` is used.
@@ -60,17 +58,30 @@
 		return this;
 	};
 
-	var cssAttrs = [ 'top','height','fontSize','lineHeight' ];
 
 	var defaultOptions = {
 		duration: 500
 	};
+
+	var TRANSFORM;
+	// find transform vendor
+	var st = window.getComputedStyle( document.body );
+	if( st.getPropertyValue("-webkit-transform") ) TRANSFORM = '-webkit-transform';
+	else if( st.getPropertyValue("-moz-transform") ) TRANSFORM = '-moz-transform';
+	else if( st.getPropertyValue("-ms-transform") ) TRANSFORM = '-ms-transform';
+	else if( st.getPropertyValue("-o-transform") ) TRANSFORM = '-o-transform';
+	else if( st.getPropertyValue("transform") ) TRANSFORM = 'transform';
+	else console.error("Either no transform set, or browser doesn't do getComputedStyle");
+
+	var cssAttrs = [ 'top','height','fontSize','lineHeight', TRANSFORM ];
 	
 	function getTransform(el) {
-		var transform = window.getComputedStyle(el, null).getPropertyValue('transform');
-		//var results = transform.match(/matrix(?:(3d)\(-{0,1}\d+(?:, -{0,1}\d+)*(?:, (-{0,1}\d+))(?:, (-{0,1}\d+))(?:, (-{0,1}\d+)), -{0,1}\d+\)|\(-{0,1}\d+(?:, -{0,1}\d+)*(?:, (-{0,1}\d+))(?:, (-{0,1}\d+))\))/);
-		//var results = transform.match(/matrix(?:(3d)\(\d+(?:, \d+)*(?:, (\d+))(?:, (\d+))(?:, (\d+)), \d+\)|\(\d+(?:, \d+)*(?:, (\d+))(?:, (\d+))\))/)
 
+		var st = window.getComputedStyle(el, null);
+		var transform = st.getPropertyValue( TRANSFORM );
+
+		//var transform = window.getComputedStyle(el, null).getPropertyValue('transform'); //var results = transform.match(/matrix(?:(3d)\(-{0,1}\d+(?:, -{0,1}\d+)*(?:, (-{0,1}\d+))(?:, (-{0,1}\d+))(?:, (-{0,1}\d+)), -{0,1}\d+\)|\(-{0,1}\d+(?:, -{0,1}\d+)*(?:, (-{0,1}\d+))(?:, (-{0,1}\d+))\))/);
+		//var results = transform.match(/matrix(?:(3d)\(\d+(?:, \d+)*(?:, (\d+))(?:, (\d+))(?:, (\d+)), \d+\)|\(\d+(?:, \d+)*(?:, (\d+))(?:, (\d+))\))/)
 
 		var results = transform.match(/matrix(?:(3d)\(-{0,1}\d+\.?\d*(?:, -{0,1}\d+\.?\d*)*(?:, (-{0,1}\d+\.?\d*))(?:, (-{0,1}\d+\.?\d*))(?:, (-{0,1}\d+\.?\d*)), -{0,1}\d+\.?\d*\)|\(-{0,1}\d+\.?\d*(?:, -{0,1}\d+\.?\d*)*(?:, (-{0,1}\d+\.?\d*))(?:, (-{0,1}\d+\.?\d*))\))/);
 
@@ -81,10 +92,20 @@
 		results.push(0);
 		return results.slice(5, 8).map(Number); // returns the [X,Y,Z,1] values
 	}
+
+	function calcByPercent( ori, percent ) {
+		if( /%$/.test( percent )) {
+			percent = Number( percent.replace('%',''));
+		}
+		return ori * (percent/100);
+	}
 	
+	aniUC.calcByPercent = function() {
+		return calcByPercent.apply( null, arguments );
+	};
 
 	aniUC.getTransform = function(el ) {
-		return getTransform( el );
+		return getTransform.apply( null, arguments );
 	};
 
 	var animatingList = {};
@@ -100,6 +121,7 @@
 		animatingList[ id ] = [{ el: el }];
 		var startPos = {};
 
+		// start value
 		_.each( endPos, function( val, key ) {
 
 			if( key === 'scrollTop' ) {
@@ -111,11 +133,15 @@
 
 				if( startPos.x === undefined ) {
 					var translate3d = getTransform( el );
+
 					startPos.x = translate3d[0] || 0;
 					startPos.y = translate3d[1] || 0;
 					startPos.z = translate3d[2] || 0;
-					startPos.transform = 'translate3d(' + startPos.x + 'px, '+ startPos.y+'px,' + startPos.z+ 'px)';
-					endPos.transform = 'translate3d(' + (endPos.x||0) + 'px, '+ (endPos.y||0)+'px,' + (endPos.z||0)+ 'px)';
+
+					//startPos.transform = 'translate3d(' + startPos.x + 'px, '+ startPos.y+'px,' + startPos.z+ 'px)';
+					//endPos.transform = 'translate3d(' + (endPos.x||0) + 'px, '+ (endPos.y||0)+'px,' + (endPos.z||0)+ 'px)';
+
+					startPos[ TRANSFORM ] = 'translate3d(' + startPos.x + 'px, '+ startPos.y+'px,' + startPos.z+ 'px)';
 				}
 
 			} else if( cssAttrs.indexOf( key ) > -1 ) {
@@ -137,8 +163,23 @@
 			}
 		});
 
-		console.log( startPos, endPos );
+		// end value
+		if( startPos[ TRANSFORM ] ) {
 
+			var regexp = /%$/;
+			if( regexp.test( endPos.x ) ) endPos.x = calcByPercent( Number(getComputedStyle( el ).width.replace('px','')), endPos.x );
+			else endPos.x = (endPos.x || 0);
+
+			if( regexp.test( endPos.y ) ) endPos.y = calcByPercent( Number(getComputedStyle( el ).height.replace('px','')), endPos.y );
+			else endPos.y = (endPos.y || 0);
+
+			if( regexp.test( endPos.z ) ) endPos.z = calcByPercent( Number(getComputedStyle( el ).height.replace('px','')), endPos.z );
+			else endPos.z = (endPos.z || 0);
+
+			endPos[ TRANSFORM ] = 'translate3d('+endPos.x+'px,'+endPos.y+'px,'+endPos.z+'px)';
+		}
+
+		//console.log( startPos, endPos );
 
 		var startTime = Date.now();
 		var stop = false;
@@ -154,14 +195,11 @@
 				complete = true;
 			}
 
-			if( stop ) {
 
+			if( stop ) {
 				_.each( startPos, function( val, key ) {
 					if( key === 'scrollTop' ) {
 						cur.scrollTop = endPos.scrollTop;
-					} else if(['x','y','z'].indexOf( key ) > -1 ) {
-						// transform's translate3d style
-						cur.transform = endPos.transform;
 					} else if( cssAttrs.indexOf( key ) > -1 ) {
 						cur[ key ] = endPos[ key ];
 					}
@@ -171,19 +209,21 @@
 
 			} else {
 				var p = ( now - startTime ) / options.duration;
-				var r = ease.outQuad( p );
+				var r = easeComponent.outQuad( p );
 				var x,y,z;
 
 				_.each( startPos, function( val, key ) {
+					if( key === TRANSFORM ) return;
 					cur[ key ] = val + ( endPos[ key ] - val ) * r;
 				});
 
 				cur.x = cur.x || 0;
 				cur.y = cur.y || 0;
 				cur.z = cur.z || 0;
-				cur.transform = 'translate3d(' + cur.x + 'px, '+ cur.y+'px,' + cur.z+ 'px)';
-				//console.log( cur.transform );
 
+				cur[ TRANSFORM ] = 'translate3d(' + cur.x + 'px, '+ cur.y+'px,' + cur.z+ 'px)';
+
+				//console.log( cur.transform );
 				//cur.scrollTop = startPos.scrollTop + ( endPos.scrollTop - startPos.scrollTop ) * r;
 			}
 
@@ -191,15 +231,17 @@
 			// 여기서 값 셋팅
 			_.each( startPos, function( val, key ) {
 				if( key === 'scrollTop' ) {
-					el.scrollTop = cur.scrollTop;
-				} else if( key === 'transform' ) {
 
-					el.style[ key ] = cur[ key ];
+					el.scrollTop = cur.scrollTop;
 
 				} else if( cssAttrs.indexOf( key ) > -1 ) {
 					
-					el.style[ key ] = cur[ key ] + 'px';
-					logger.debug( el.style[ key ] );
+					if( key === TRANSFORM ) {
+						el.style[ key ] = cur[ key ];
+					} else {
+						el.style[ key ] = cur[ key ] + 'px';
+					}
+					//console.log( cur[ key ] );
 				}
 			});
 			//el.scrollTop = cur.scrollTop;
