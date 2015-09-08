@@ -1,6 +1,6 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 (function (global){
-//     animationUC.js 1.2.1
+//     animationUC.js 0.1.1
 
 //     (c) 2015 Byunghwa Yoo
 //     animationUC may be freely distributed under the MIT license.
@@ -20,11 +20,11 @@
 	// Set up Backbone appropriately for the environment. Start with AMD.
 	if (typeof define === 'function' && define.amd) {
 
-		define(['raf-uc', 'ease-component', 'underscore', 'loglevel', 'exports'],
-		function( rafUC, ease, _, logger, exports) {
+		define(['raf-uc', 'ease-uc', 'underscore', 'exports'],
+		function( rafUC, easeUc, _, exports) {
 			// Export global even in AMD case in case this script is loaded with
 			// others that may still expect a global aniUC.
-			root.aniUC = factory(root, exports, rafUC.raf, rafUC.caf, ease, _, logger );
+			root.aniUC = factory(root, exports, rafUC.raf, rafUC.caf, easeUc, _ );
 		});
 
 
@@ -34,25 +34,23 @@
 	} else if (typeof exports !== 'undefined') {
 
 		var rafUC = require('raf-uc');
-		var ease = require('ease-component');
+		var easeUc = require('ease-uc');
 		var _ = require('underscore');
-		var logger = require('loglevel');
 
-		factory(root, exports, rafUC.raf, rafUC.caf, ease, _, logger );
+		factory(root, exports, rafUC.raf, rafUC.caf, easeUc, _ );
 
 
 
 
 	// Finally, as a browser global.
 	} else {
-		root.logger = root.log;	// in case of loglevel
-		root.aniUC = factory(root, {}, root.rafUC.raf, root.rafUC.caf, root.ease, root._, root.logger );
+		root.aniUC = factory(root, {}, root.rafUC.raf, root.rafUC.caf, root.easeUc, root._ );
 	}
 	
-}( function( root, aniUC, raf, caf, ease, _, logger ) {
+}( function( root, aniUC, raf, caf, easeUc, _ ) {
 
 	// Current version of the library. Keep in sync with `package.json`.
-	aniUC.VERSION = '0.0.1';
+	aniUC.VERSION = '0.1.0';
 
 	// Save the previous value of the `Backbone` variable, so that it can be
 	// restored later on, if `noConflict` is used.
@@ -62,17 +60,30 @@
 		return this;
 	};
 
-	var cssAttrs = [ 'top','height','fontSize','lineHeight' ];
 
 	var defaultOptions = {
 		duration: 500
 	};
+
+	var TRANSFORM;
+	// find transform vendor
+	var st = window.getComputedStyle( document.body );
+	if( st.getPropertyValue("-webkit-transform") ) TRANSFORM = '-webkit-transform';
+	else if( st.getPropertyValue("-moz-transform") ) TRANSFORM = '-moz-transform';
+	else if( st.getPropertyValue("-ms-transform") ) TRANSFORM = '-ms-transform';
+	else if( st.getPropertyValue("-o-transform") ) TRANSFORM = '-o-transform';
+	else if( st.getPropertyValue("transform") ) TRANSFORM = 'transform';
+	else console.error("Either no transform set, or browser doesn't do getComputedStyle");
+
+	var cssAttrs = [ 'top','height','fontSize','lineHeight', TRANSFORM ];
 	
 	function getTransform(el) {
-		var transform = window.getComputedStyle(el, null).getPropertyValue('transform');
-		//var results = transform.match(/matrix(?:(3d)\(-{0,1}\d+(?:, -{0,1}\d+)*(?:, (-{0,1}\d+))(?:, (-{0,1}\d+))(?:, (-{0,1}\d+)), -{0,1}\d+\)|\(-{0,1}\d+(?:, -{0,1}\d+)*(?:, (-{0,1}\d+))(?:, (-{0,1}\d+))\))/);
-		//var results = transform.match(/matrix(?:(3d)\(\d+(?:, \d+)*(?:, (\d+))(?:, (\d+))(?:, (\d+)), \d+\)|\(\d+(?:, \d+)*(?:, (\d+))(?:, (\d+))\))/)
 
+		var st = window.getComputedStyle(el, null);
+		var transform = st.getPropertyValue( TRANSFORM );
+
+		//var transform = window.getComputedStyle(el, null).getPropertyValue('transform'); //var results = transform.match(/matrix(?:(3d)\(-{0,1}\d+(?:, -{0,1}\d+)*(?:, (-{0,1}\d+))(?:, (-{0,1}\d+))(?:, (-{0,1}\d+)), -{0,1}\d+\)|\(-{0,1}\d+(?:, -{0,1}\d+)*(?:, (-{0,1}\d+))(?:, (-{0,1}\d+))\))/);
+		//var results = transform.match(/matrix(?:(3d)\(\d+(?:, \d+)*(?:, (\d+))(?:, (\d+))(?:, (\d+)), \d+\)|\(\d+(?:, \d+)*(?:, (\d+))(?:, (\d+))\))/)
 
 		var results = transform.match(/matrix(?:(3d)\(-{0,1}\d+\.?\d*(?:, -{0,1}\d+\.?\d*)*(?:, (-{0,1}\d+\.?\d*))(?:, (-{0,1}\d+\.?\d*))(?:, (-{0,1}\d+\.?\d*)), -{0,1}\d+\.?\d*\)|\(-{0,1}\d+\.?\d*(?:, -{0,1}\d+\.?\d*)*(?:, (-{0,1}\d+\.?\d*))(?:, (-{0,1}\d+\.?\d*))\))/);
 
@@ -83,11 +94,23 @@
 		results.push(0);
 		return results.slice(5, 8).map(Number); // returns the [X,Y,Z,1] values
 	}
+
+	function calcByPercent( ori, percent ) {
+		if( /%$/.test( percent )) {
+			percent = Number( percent.replace('%',''));
+		}
+		return ori * (percent/100);
+	}
 	
+	aniUC.calcByPercent = function() {
+		return calcByPercent.apply( null, arguments );
+	};
 
 	aniUC.getTransform = function(el ) {
-		return getTransform( el );
+		return getTransform.apply( null, arguments );
 	};
+
+	var animatingList = {};
 
 	aniUC.tween = function( el, endPos, options ) {
 
@@ -95,8 +118,12 @@
 
 		options = _.extend({}, defaultOptions, options );
 
+		var id = _.uniqueId('animating');
+
+		animatingList[ id ] = [{ el: el }];
 		var startPos = {};
 
+		// start value
 		_.each( endPos, function( val, key ) {
 
 			if( key === 'scrollTop' ) {
@@ -108,11 +135,15 @@
 
 				if( startPos.x === undefined ) {
 					var translate3d = getTransform( el );
+
 					startPos.x = translate3d[0] || 0;
 					startPos.y = translate3d[1] || 0;
 					startPos.z = translate3d[2] || 0;
-					startPos.transform = 'translate3d(' + startPos.x + 'px, '+ startPos.y+'px,' + startPos.z+ 'px)';
-					endPos.transform = 'translate3d(' + (endPos.x||0) + 'px, '+ (endPos.y||0)+'px,' + (endPos.z||0)+ 'px)';
+
+					//startPos.transform = 'translate3d(' + startPos.x + 'px, '+ startPos.y+'px,' + startPos.z+ 'px)';
+					//endPos.transform = 'translate3d(' + (endPos.x||0) + 'px, '+ (endPos.y||0)+'px,' + (endPos.z||0)+ 'px)';
+
+					startPos[ TRANSFORM ] = 'translate3d(' + startPos.x + 'px, '+ startPos.y+'px,' + startPos.z+ 'px)';
 				}
 
 			} else if( cssAttrs.indexOf( key ) > -1 ) {
@@ -134,8 +165,23 @@
 			}
 		});
 
-		console.log( startPos, endPos );
+		// end value
+		if( startPos[ TRANSFORM ] ) {
 
+			var regexp = /%$/;
+			if( regexp.test( endPos.x ) ) endPos.x = calcByPercent( Number(getComputedStyle( el ).width.replace('px','')), endPos.x );
+			else endPos.x = (endPos.x || 0);
+
+			if( regexp.test( endPos.y ) ) endPos.y = calcByPercent( Number(getComputedStyle( el ).height.replace('px','')), endPos.y );
+			else endPos.y = (endPos.y || 0);
+
+			if( regexp.test( endPos.z ) ) endPos.z = calcByPercent( Number(getComputedStyle( el ).height.replace('px','')), endPos.z );
+			else endPos.z = (endPos.z || 0);
+
+			endPos[ TRANSFORM ] = 'translate3d('+endPos.x+'px,'+endPos.y+'px,'+endPos.z+'px)';
+		}
+
+		//console.log( startPos, endPos );
 
 		var startTime = Date.now();
 		var stop = false;
@@ -146,19 +192,16 @@
 			var cur = {};
 			var now = Date.now();
 
-			if( now - startTime >= options.duration ) {
+			if( now - startTime >= options.duration || animatingList[ id ].stop ) {
 				stop = true;
 				complete = true;
 			}
 
-			if( stop ) {
 
+			if( stop ) {
 				_.each( startPos, function( val, key ) {
 					if( key === 'scrollTop' ) {
 						cur.scrollTop = endPos.scrollTop;
-					} else if(['x','y','z'].indexOf( key ) > -1 ) {
-						// transform's translate3d style
-						cur.transform = endPos.transform;
 					} else if( cssAttrs.indexOf( key ) > -1 ) {
 						cur[ key ] = endPos[ key ];
 					}
@@ -168,19 +211,21 @@
 
 			} else {
 				var p = ( now - startTime ) / options.duration;
-				var r = ease.outQuad( p );
+				var r = easeUc.outQuad( p );
 				var x,y,z;
 
 				_.each( startPos, function( val, key ) {
+					if( key === TRANSFORM ) return;
 					cur[ key ] = val + ( endPos[ key ] - val ) * r;
 				});
 
 				cur.x = cur.x || 0;
 				cur.y = cur.y || 0;
 				cur.z = cur.z || 0;
-				cur.transform = 'translate3d(' + cur.x + 'px, '+ cur.y+'px,' + cur.z+ 'px)';
-				//console.log( cur.transform );
 
+				cur[ TRANSFORM ] = 'translate3d(' + cur.x + 'px, '+ cur.y+'px,' + cur.z+ 'px)';
+
+				//console.log( cur.transform );
 				//cur.scrollTop = startPos.scrollTop + ( endPos.scrollTop - startPos.scrollTop ) * r;
 			}
 
@@ -188,15 +233,17 @@
 			// 여기서 값 셋팅
 			_.each( startPos, function( val, key ) {
 				if( key === 'scrollTop' ) {
-					el.scrollTop = cur.scrollTop;
-				} else if( key === 'transform' ) {
 
-					el.style[ key ] = cur[ key ];
+					el.scrollTop = cur.scrollTop;
 
 				} else if( cssAttrs.indexOf( key ) > -1 ) {
 					
-					el.style[ key ] = cur[ key ] + 'px';
-					logger.debug( el.style[ key ] );
+					if( key === TRANSFORM ) {
+						el.style[ key ] = cur[ key ];
+					} else {
+						el.style[ key ] = cur[ key ] + 'px';
+					}
+					//console.log( cur[ key ] );
 				}
 			});
 			//el.scrollTop = cur.scrollTop;
@@ -226,7 +273,7 @@
 }));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"ease-component":3,"loglevel":4,"raf-uc":5,"underscore":6}],2:[function(require,module,exports){
+},{"ease-uc":3,"raf-uc":4,"underscore":5}],2:[function(require,module,exports){
 
 var aniUC = require('../animation-uc');
 
@@ -247,403 +294,220 @@ setTimeout( function() {
 }, 2000 );
 
 },{"../animation-uc":1}],3:[function(require,module,exports){
+(function (global){
 
 // easing functions from "Tween.js"
+// Special Thanks for ease-component
 
-exports.linear = function(n){
-  return n;
-};
+(function( factory ) {
 
-exports.inQuad = function(n){
-  return n * n;
-};
+	'use strict';
 
-exports.outQuad = function(n){
-  return n * (2 - n);
-};
+	// We use `self` instead of `window` for `WebWorker` support.
+	var root = (typeof self == 'object' && self.self == self && self) ||
+			(typeof global == 'object' && global.global == global && global);
 
-exports.inOutQuad = function(n){
-  n *= 2;
-  if (n < 1) return 0.5 * n * n;
-  return - 0.5 * (--n * (n - 2) - 1);
-};
+	// Set up Backbone appropriately for the environment. Start with AMD.
+	if (typeof define === 'function' && define.amd) {
 
-exports.inCube = function(n){
-  return n * n * n;
-};
+		define(['exports'], function(exports) {
+			// Export global even in AMD case in case this script is loaded with
+			// others that may still expect a global easeUc.
+			root.easeUc = factory( root, exports );
+		});
 
-exports.outCube = function(n){
-  return --n * n * n + 1;
-};
+	// Next for CommonJS.
+	} else if (typeof exports !== 'undefined') {
+		factory( root, exports );
 
-exports.inOutCube = function(n){
-  n *= 2;
-  if (n < 1) return 0.5 * n * n * n;
-  return 0.5 * ((n -= 2 ) * n * n + 2);
-};
+	// Finally, as a browser global.
+	} else {
+		root.easeUc = factory( root, {} );
+	}
 
-exports.inQuart = function(n){
-  return n * n * n * n;
-};
+}( function( root, easeUc ) {
+	
+	// Current version of the library. Keep in sync with `package.json`.
+	easeUc.VERSION = '0.0.3';
 
-exports.outQuart = function(n){
-  return 1 - (--n * n * n * n);
-};
+	var previousEaseUc  = root.easeUc;
+	easeUc.noConflict = function() {
+		root.easeUc = previousEaseUc ;
+		return this;
+	};
 
-exports.inOutQuart = function(n){
-  n *= 2;
-  if (n < 1) return 0.5 * n * n * n * n;
-  return -0.5 * ((n -= 2) * n * n * n - 2);
-};
+	easeUc.linear = function(n){
+	  return n;
+	};
 
-exports.inQuint = function(n){
-  return n * n * n * n * n;
-}
+	easeUc.inQuad = function(n){
+	  return n * n;
+	};
 
-exports.outQuint = function(n){
-  return --n * n * n * n * n + 1;
-}
+	easeUc.outQuad = function(n){
+	  return n * (2 - n);
+	};
 
-exports.inOutQuint = function(n){
-  n *= 2;
-  if (n < 1) return 0.5 * n * n * n * n * n;
-  return 0.5 * ((n -= 2) * n * n * n * n + 2);
-};
+	easeUc.inOutQuad = function(n){
+	  n *= 2;
+	  if (n < 1) return 0.5 * n * n;
+	  return - 0.5 * (--n * (n - 2) - 1);
+	};
 
-exports.inSine = function(n){
-  return 1 - Math.cos(n * Math.PI / 2 );
-};
+	easeUc.inCube = function(n){
+	  return n * n * n;
+	};
 
-exports.outSine = function(n){
-  return Math.sin(n * Math.PI / 2);
-};
+	easeUc.outCube = function(n){
+	  return --n * n * n + 1;
+	};
 
-exports.inOutSine = function(n){
-  return .5 * (1 - Math.cos(Math.PI * n));
-};
+	easeUc.inOutCube = function(n){
+	  n *= 2;
+	  if (n < 1) return 0.5 * n * n * n;
+	  return 0.5 * ((n -= 2 ) * n * n + 2);
+	};
 
-exports.inExpo = function(n){
-  return 0 == n ? 0 : Math.pow(1024, n - 1);
-};
+	easeUc.inQuart = function(n){
+	  return n * n * n * n;
+	};
 
-exports.outExpo = function(n){
-  return 1 == n ? n : 1 - Math.pow(2, -10 * n);
-};
+	easeUc.outQuart = function(n){
+	  return 1 - (--n * n * n * n);
+	};
 
-exports.inOutExpo = function(n){
-  if (0 == n) return 0;
-  if (1 == n) return 1;
-  if ((n *= 2) < 1) return .5 * Math.pow(1024, n - 1);
-  return .5 * (-Math.pow(2, -10 * (n - 1)) + 2);
-};
+	easeUc.inOutQuart = function(n){
+	  n *= 2;
+	  if (n < 1) return 0.5 * n * n * n * n;
+	  return -0.5 * ((n -= 2) * n * n * n - 2);
+	};
 
-exports.inCirc = function(n){
-  return 1 - Math.sqrt(1 - n * n);
-};
+	easeUc.inQuint = function(n){
+	  return n * n * n * n * n;
+	}
 
-exports.outCirc = function(n){
-  return Math.sqrt(1 - (--n * n));
-};
+	easeUc.outQuint = function(n){
+	  return --n * n * n * n * n + 1;
+	}
 
-exports.inOutCirc = function(n){
-  n *= 2
-  if (n < 1) return -0.5 * (Math.sqrt(1 - n * n) - 1);
-  return 0.5 * (Math.sqrt(1 - (n -= 2) * n) + 1);
-};
+	easeUc.inOutQuint = function(n){
+	  n *= 2;
+	  if (n < 1) return 0.5 * n * n * n * n * n;
+	  return 0.5 * ((n -= 2) * n * n * n * n + 2);
+	};
 
-exports.inBack = function(n){
-  var s = 1.70158;
-  return n * n * (( s + 1 ) * n - s);
-};
+	easeUc.inSine = function(n){
+	  return 1 - Math.cos(n * Math.PI / 2 );
+	};
 
-exports.outBack = function(n){
-  var s = 1.70158;
-  return --n * n * ((s + 1) * n + s) + 1;
-};
+	easeUc.outSine = function(n){
+	  return Math.sin(n * Math.PI / 2);
+	};
 
-exports.inOutBack = function(n){
-  var s = 1.70158 * 1.525;
-  if ( ( n *= 2 ) < 1 ) return 0.5 * ( n * n * ( ( s + 1 ) * n - s ) );
-  return 0.5 * ( ( n -= 2 ) * n * ( ( s + 1 ) * n + s ) + 2 );
-};
+	easeUc.inOutSine = function(n){
+	  return .5 * (1 - Math.cos(Math.PI * n));
+	};
 
-exports.inBounce = function(n){
-  return 1 - exports.outBounce(1 - n);
-};
+	easeUc.inExpo = function(n){
+	  return 0 == n ? 0 : Math.pow(1024, n - 1);
+	};
 
-exports.outBounce = function(n){
-  if ( n < ( 1 / 2.75 ) ) {
-    return 7.5625 * n * n;
-  } else if ( n < ( 2 / 2.75 ) ) {
-    return 7.5625 * ( n -= ( 1.5 / 2.75 ) ) * n + 0.75;
-  } else if ( n < ( 2.5 / 2.75 ) ) {
-    return 7.5625 * ( n -= ( 2.25 / 2.75 ) ) * n + 0.9375;
-  } else {
-    return 7.5625 * ( n -= ( 2.625 / 2.75 ) ) * n + 0.984375;
-  }
-};
+	easeUc.outExpo = function(n){
+	  return 1 == n ? n : 1 - Math.pow(2, -10 * n);
+	};
 
-exports.inOutBounce = function(n){
-  if (n < .5) return exports.inBounce(n * 2) * .5;
-  return exports.outBounce(n * 2 - 1) * .5 + .5;
-};
+	easeUc.inOutExpo = function(n){
+	  if (0 == n) return 0;
+	  if (1 == n) return 1;
+	  if ((n *= 2) < 1) return .5 * Math.pow(1024, n - 1);
+	  return .5 * (-Math.pow(2, -10 * (n - 1)) + 2);
+	};
 
-// aliases
+	easeUc.inCirc = function(n){
+	  return 1 - Math.sqrt(1 - n * n);
+	};
 
-exports['in-quad'] = exports.inQuad;
-exports['out-quad'] = exports.outQuad;
-exports['in-out-quad'] = exports.inOutQuad;
-exports['in-cube'] = exports.inCube;
-exports['out-cube'] = exports.outCube;
-exports['in-out-cube'] = exports.inOutCube;
-exports['in-quart'] = exports.inQuart;
-exports['out-quart'] = exports.outQuart;
-exports['in-out-quart'] = exports.inOutQuart;
-exports['in-quint'] = exports.inQuint;
-exports['out-quint'] = exports.outQuint;
-exports['in-out-quint'] = exports.inOutQuint;
-exports['in-sine'] = exports.inSine;
-exports['out-sine'] = exports.outSine;
-exports['in-out-sine'] = exports.inOutSine;
-exports['in-expo'] = exports.inExpo;
-exports['out-expo'] = exports.outExpo;
-exports['in-out-expo'] = exports.inOutExpo;
-exports['in-circ'] = exports.inCirc;
-exports['out-circ'] = exports.outCirc;
-exports['in-out-circ'] = exports.inOutCirc;
-exports['in-back'] = exports.inBack;
-exports['out-back'] = exports.outBack;
-exports['in-out-back'] = exports.inOutBack;
-exports['in-bounce'] = exports.inBounce;
-exports['out-bounce'] = exports.outBounce;
-exports['in-out-bounce'] = exports.inOutBounce;
+	easeUc.outCirc = function(n){
+	  return Math.sqrt(1 - (--n * n));
+	};
 
-},{}],4:[function(require,module,exports){
-/*
-* loglevel - https://github.com/pimterry/loglevel
-*
-* Copyright (c) 2013 Tim Perry
-* Licensed under the MIT license.
-*/
-(function (root, definition) {
-    "use strict";
-    if (typeof module === 'object' && module.exports && typeof require === 'function') {
-        module.exports = definition();
-    } else if (typeof define === 'function' && typeof define.amd === 'object') {
-        define(definition);
-    } else {
-        root.log = definition();
-    }
-}(this, function () {
-    "use strict";
-    var noop = function() {};
-    var undefinedType = "undefined";
+	easeUc.inOutCirc = function(n){
+	  n *= 2
+	  if (n < 1) return -0.5 * (Math.sqrt(1 - n * n) - 1);
+	  return 0.5 * (Math.sqrt(1 - (n -= 2) * n) + 1);
+	};
 
-    function realMethod(methodName) {
-        if (typeof console === undefinedType) {
-            return false; // We can't build a real method without a console to log to
-        } else if (console[methodName] !== undefined) {
-            return bindMethod(console, methodName);
-        } else if (console.log !== undefined) {
-            return bindMethod(console, 'log');
-        } else {
-            return noop;
-        }
-    }
+	easeUc.inBack = function(n){
+	  var s = 1.70158;
+	  return n * n * (( s + 1 ) * n - s);
+	};
 
-    function bindMethod(obj, methodName) {
-        var method = obj[methodName];
-        if (typeof method.bind === 'function') {
-            return method.bind(obj);
-        } else {
-            try {
-                return Function.prototype.bind.call(method, obj);
-            } catch (e) {
-                // Missing bind shim or IE8 + Modernizr, fallback to wrapping
-                return function() {
-                    return Function.prototype.apply.apply(method, [obj, arguments]);
-                };
-            }
-        }
-    }
+	easeUc.outBack = function(n){
+	  var s = 1.70158;
+	  return --n * n * ((s + 1) * n + s) + 1;
+	};
 
-    // these private functions always need `this` to be set properly
+	easeUc.inOutBack = function(n){
+	  var s = 1.70158 * 1.525;
+	  if ( ( n *= 2 ) < 1 ) return 0.5 * ( n * n * ( ( s + 1 ) * n - s ) );
+	  return 0.5 * ( ( n -= 2 ) * n * ( ( s + 1 ) * n + s ) + 2 );
+	};
 
-    function enableLoggingWhenConsoleArrives(methodName, level, loggerName) {
-        return function () {
-            if (typeof console !== undefinedType) {
-                replaceLoggingMethods.call(this, level, loggerName);
-                this[methodName].apply(this, arguments);
-            }
-        };
-    }
+	easeUc.inBounce = function(n){
+	  return 1 - easeUc.outBounce(1 - n);
+	};
 
-    function replaceLoggingMethods(level, loggerName) {
-        /*jshint validthis:true */
-        for (var i = 0; i < logMethods.length; i++) {
-            var methodName = logMethods[i];
-            this[methodName] = (i < level) ?
-                noop :
-                this.methodFactory(methodName, level, loggerName);
-        }
-    }
+	easeUc.outBounce = function(n){
+	  if ( n < ( 1 / 2.75 ) ) {
+		return 7.5625 * n * n;
+	  } else if ( n < ( 2 / 2.75 ) ) {
+		return 7.5625 * ( n -= ( 1.5 / 2.75 ) ) * n + 0.75;
+	  } else if ( n < ( 2.5 / 2.75 ) ) {
+		return 7.5625 * ( n -= ( 2.25 / 2.75 ) ) * n + 0.9375;
+	  } else {
+		return 7.5625 * ( n -= ( 2.625 / 2.75 ) ) * n + 0.984375;
+	  }
+	};
 
-    function defaultMethodFactory(methodName, level, loggerName) {
-        /*jshint validthis:true */
-        return realMethod(methodName) ||
-               enableLoggingWhenConsoleArrives.apply(this, arguments);
-    }
+	easeUc.inOutBounce = function(n){
+	  if (n < .5) return easeUc.inBounce(n * 2) * .5;
+	  return easeUc.outBounce(n * 2 - 1) * .5 + .5;
+	};
 
-    var logMethods = [
-        "trace",
-        "debug",
-        "info",
-        "warn",
-        "error"
-    ];
+	// aliases
+	easeUc['in-quad'] = easeUc.inQuad;
+	easeUc['out-quad'] = easeUc.outQuad;
+	easeUc['in-out-quad'] = easeUc.inOutQuad;
+	easeUc['in-cube'] = easeUc.inCube;
+	easeUc['out-cube'] = easeUc.outCube;
+	easeUc['in-out-cube'] = easeUc.inOutCube;
+	easeUc['in-quart'] = easeUc.inQuart;
+	easeUc['out-quart'] = easeUc.outQuart;
+	easeUc['in-out-quart'] = easeUc.inOutQuart;
+	easeUc['in-quint'] = easeUc.inQuint;
+	easeUc['out-quint'] = easeUc.outQuint;
+	easeUc['in-out-quint'] = easeUc.inOutQuint;
+	easeUc['in-sine'] = easeUc.inSine;
+	easeUc['out-sine'] = easeUc.outSine;
+	easeUc['in-out-sine'] = easeUc.inOutSine;
+	easeUc['in-expo'] = easeUc.inExpo;
+	easeUc['out-expo'] = easeUc.outExpo;
+	easeUc['in-out-expo'] = easeUc.inOutExpo;
+	easeUc['in-circ'] = easeUc.inCirc;
+	easeUc['out-circ'] = easeUc.outCirc;
+	easeUc['in-out-circ'] = easeUc.inOutCirc;
+	easeUc['in-back'] = easeUc.inBack;
+	easeUc['out-back'] = easeUc.outBack;
+	easeUc['in-out-back'] = easeUc.inOutBack;
+	easeUc['in-bounce'] = easeUc.inBounce;
+	easeUc['out-bounce'] = easeUc.outBounce;
+	easeUc['in-out-bounce'] = easeUc.inOutBounce;
 
-    function Logger(name, defaultLevel, factory) {
-      var self = this;
-      var currentLevel;
-      var storageKey = "loglevel";
-      if (name) {
-        storageKey += ":" + name;
-      }
-
-      function persistLevelIfPossible(levelNum) {
-          var levelName = (logMethods[levelNum] || 'silent').toUpperCase();
-
-          // Use localStorage if available
-          try {
-              window.localStorage[storageKey] = levelName;
-              return;
-          } catch (ignore) {}
-
-          // Use session cookie as fallback
-          try {
-              window.document.cookie =
-                encodeURIComponent(storageKey) + "=" + levelName + ";";
-          } catch (ignore) {}
-      }
-
-      function getPersistedLevel() {
-          var storedLevel;
-
-          try {
-              storedLevel = window.localStorage[storageKey];
-          } catch (ignore) {}
-
-          if (typeof storedLevel === undefinedType) {
-              try {
-                  var cookie = window.document.cookie;
-                  var location = cookie.indexOf(
-                      encodeURIComponent(storageKey) + "=");
-                  if (location) {
-                      storedLevel = /^([^;]+)/.exec(cookie.slice(location))[1];
-                  }
-              } catch (ignore) {}
-          }
-
-          // If the stored level is not valid, treat it as if nothing was stored.
-          if (self.levels[storedLevel] === undefined) {
-              storedLevel = undefined;
-          }
-
-          return storedLevel;
-      }
-
-      /*
-       *
-       * Public API
-       *
-       */
-
-      self.levels = { "TRACE": 0, "DEBUG": 1, "INFO": 2, "WARN": 3,
-          "ERROR": 4, "SILENT": 5};
-
-      self.methodFactory = factory || defaultMethodFactory;
-
-      self.getLevel = function () {
-          return currentLevel;
-      };
-
-      self.setLevel = function (level, persist) {
-          if (typeof level === "string" && self.levels[level.toUpperCase()] !== undefined) {
-              level = self.levels[level.toUpperCase()];
-          }
-          if (typeof level === "number" && level >= 0 && level <= self.levels.SILENT) {
-              currentLevel = level;
-              if (persist !== false) {  // defaults to true
-                  persistLevelIfPossible(level);
-              }
-              replaceLoggingMethods.call(self, level, name);
-              if (typeof console === undefinedType && level < self.levels.SILENT) {
-                  return "No console available for logging";
-              }
-          } else {
-              throw "log.setLevel() called with invalid level: " + level;
-          }
-      };
-
-      self.setDefaultLevel = function (level) {
-          if (!getPersistedLevel()) {
-              self.setLevel(level, false);
-          }
-      };
-
-      self.enableAll = function(persist) {
-          self.setLevel(self.levels.TRACE, persist);
-      };
-
-      self.disableAll = function(persist) {
-          self.setLevel(self.levels.SILENT, persist);
-      };
-
-      // Initialize with the right level
-      var initialLevel = getPersistedLevel();
-      if (initialLevel == null) {
-          initialLevel = defaultLevel == null ? "WARN" : defaultLevel;
-      }
-      self.setLevel(initialLevel, false);
-    }
-
-    /*
-     *
-     * Package-level API
-     *
-     */
-
-    var defaultLogger = new Logger();
-
-    var _loggersByName = {};
-    defaultLogger.getLogger = function getLogger(name) {
-        if (typeof name !== "string" || name === "") {
-          throw new TypeError("You must supply a name when creating a logger.");
-        }
-
-        var logger = _loggersByName[name];
-        if (!logger) {
-          logger = _loggersByName[name] = new Logger(
-            name, defaultLogger.getLevel(), defaultLogger.methodFactory);
-        }
-        return logger;
-    };
-
-    // Grab the current global log variable in case of overwrite
-    var _log = (typeof window !== undefinedType) ? window.log : undefined;
-    defaultLogger.noConflict = function() {
-        if (typeof window !== undefinedType &&
-               window.log === defaultLogger) {
-            window.log = _log;
-        }
-
-        return defaultLogger;
-    };
-
-    return defaultLogger;
+	return easeUc;
 }));
 
-},{}],5:[function(require,module,exports){
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],4:[function(require,module,exports){
 (function (global){
 /**
  * Thanks for following 
@@ -749,7 +613,7 @@ exports['in-out-bounce'] = exports.inOutBounce;
 }));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],6:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 //     Underscore.js 1.8.3
 //     http://underscorejs.org
 //     (c) 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors

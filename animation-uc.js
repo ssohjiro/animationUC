@@ -1,4 +1,4 @@
-//     animationUC.js 0.1.0
+//     animationUC.js 0.1.1
 
 //     (c) 2015 Byunghwa Yoo
 //     animationUC may be freely distributed under the MIT license.
@@ -18,11 +18,11 @@
 	// Set up Backbone appropriately for the environment. Start with AMD.
 	if (typeof define === 'function' && define.amd) {
 
-		define(['raf-uc', 'ease-component', 'underscore', 'exports'],
-		function( rafUC, easeComponent, _, exports) {
+		define(['raf-uc', 'ease-uc', 'underscore', 'exports'],
+		function( rafUC, easeUc, _, exports) {
 			// Export global even in AMD case in case this script is loaded with
 			// others that may still expect a global aniUC.
-			root.aniUC = factory(root, exports, rafUC.raf, rafUC.caf, easeComponent, _ );
+			root.aniUC = factory(root, exports, rafUC.raf, rafUC.caf, easeUc, _ );
 		});
 
 
@@ -32,20 +32,20 @@
 	} else if (typeof exports !== 'undefined') {
 
 		var rafUC = require('raf-uc');
-		var easeComponent = require('ease-component');
+		var easeUc = require('ease-uc');
 		var _ = require('underscore');
 
-		factory(root, exports, rafUC.raf, rafUC.caf, easeComponent, _ );
+		factory(root, exports, rafUC.raf, rafUC.caf, easeUc, _ );
 
 
 
 
 	// Finally, as a browser global.
 	} else {
-		root.aniUC = factory(root, {}, root.rafUC.raf, root.rafUC.caf, root.easeComponent, root._ );
+		root.aniUC = factory(root, {}, root.rafUC.raf, root.rafUC.caf, root.easeUc, root._ );
 	}
 	
-}( function( root, aniUC, raf, caf, easeComponent, _ ) {
+}( function( root, aniUC, raf, caf, easeUc, _ ) {
 
 	// Current version of the library. Keep in sync with `package.json`.
 	aniUC.VERSION = '0.1.0';
@@ -209,7 +209,7 @@
 
 			} else {
 				var p = ( now - startTime ) / options.duration;
-				var r = easeComponent.outQuad( p );
+				var r = easeUc.outQuad( p );
 				var x,y,z;
 
 				_.each( startPos, function( val, key ) {

@@ -2,11 +2,11 @@
   "name": "animation-uc",
   "main": "animation-uc.js",
   "dependencies": {
-    "ease-uc": "^0.0.2",
+    "ease-uc": "^0.0.3",
     "raf-uc": "^0.0.2",
     "underscore": "^1.8.3"
   },
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Notice!! Do not use now, this version is test beta verison. Light weight javascript library that support the requestAnimationFrame and easing functions for performance",
   "directories": {
     "example": "examples"
@@ -19,7 +19,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ssohjiro/animationUC.git"
+    "url": "git+https://github.com/ssohjiro/animationUC.git"
   },
   "keywords": [
     "requestAnimationFrame",
@@ -36,10 +36,25 @@
     "url": "https://github.com/ssohjiro/animationUC/issues"
   },
   "homepage": "https://github.com/ssohjiro/animationUC",
-  "readme": "# animationUC\nLight weight javascript library that support the requestAnimationFrame and easing functions for performance\n\n# dependencies\neasing function: https://github.com/component/ease\n\n# Special thanks\nhttps://gist.github.com/desandro/1866474\n",
-  "readmeFilename": "README.md",
   "gitHead": "1cfe9ba179d399147a3eabfbb06ce6ef715e2deb",
-  "_id": "animation-uc@0.0.1",
-  "_shasum": "b7be8b946da24cd2639258bda6d2c4e91877054c",
-  "_from": "animation-uc@*"
+  "_id": "animation-uc@0.1.1",
+  "_shasum": "560b3dc1a54c7ad65852656f1dcfb7ab59bdb09f",
+  "_from": "animation-uc@*",
+  "_npmVersion": "2.11.3",
+  "_npmUser": {
+    "name": "ssohjiro",
+    "email": "ssohjiro@gmail.com"
+  },
+  "dist": {
+    "shasum": "560b3dc1a54c7ad65852656f1dcfb7ab59bdb09f",
+    "tarball": "http://registry.npmjs.org/animation-uc/-/animation-uc-0.1.1.tgz"
+  },
+  "maintainers": [
+    {
+      "name": "ssohjiro",
+      "email": "ssohjiro@gmail.com"
+    }
+  ],
+  "_resolved": "https://registry.npmjs.org/animation-uc/-/animation-uc-0.1.1.tgz",
+  "_nodeVersion": "0.12.7"
 }
