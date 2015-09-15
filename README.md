@@ -11,3 +11,7 @@ raf-uc: requestAnimationFrame pollfill library : https://github.com/ssohjiro/raf
 # Special thanks
 https://gist.github.com/desandro/1866474
 https://github.com/component/ease
+
+# Change Log
+
+1.1.2: support css opacity attribute

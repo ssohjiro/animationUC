@@ -48,7 +48,7 @@
 }( function( root, aniUC, raf, caf, easeUc, _ ) {
 
 	// Current version of the library. Keep in sync with `package.json`.
-	aniUC.VERSION = '0.1.0';
+	aniUC.VERSION = '0.1.2';
 
 	// Save the previous value of the `Backbone` variable, so that it can be
 	// restored later on, if `noConflict` is used.
@@ -73,7 +73,7 @@
 	else if( st.getPropertyValue("transform") ) TRANSFORM = 'transform';
 	else console.error("Either no transform set, or browser doesn't do getComputedStyle");
 
-	var cssAttrs = [ 'top','height','fontSize','lineHeight', TRANSFORM ];
+	var cssAttrs = [ 'top','height','fontSize','lineHeight', 'opacity', TRANSFORM ];
 	
 	function getTransform(el) {
 
@@ -150,7 +150,13 @@
 				var position = computedStyle.position;
 
 				var tmpStartPos = computedStyle[ key ].replace('px','');
-				if( key === 'top' && tmpStartPos === 'auto' ) {
+
+				if( key === 'opacity' ) {
+
+					if( tmpStartPos === "" ) tmpStartPos = 1;
+
+				} else if( key === 'top' && tmpStartPos === 'auto' ) {
+
 					if( position === 'absolute' ) tmpStartPos = el.offsetTop;
 					else if( position === 'relative' ) tmpStartPos = 0;
 				}
@@ -236,7 +242,7 @@
 
 				} else if( cssAttrs.indexOf( key ) > -1 ) {
 					
-					if( key === TRANSFORM ) {
+					if( key === TRANSFORM || key === 'opacity' ) {
 						el.style[ key ] = cur[ key ];
 					} else {
 						el.style[ key ] = cur[ key ] + 'px';
@@ -253,7 +259,7 @@
 		function animate() {
 
 			if( complete ) {
-				if( options.complete && typeof options.complete === 'function' ) {
+				if( typeof options.complete === 'function' ) {
 					options.complete( el );
 				}
 			}
