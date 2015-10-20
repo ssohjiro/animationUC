@@ -14,4 +14,5 @@ https://github.com/component/ease
 
 # Change Log
 
-1.1.2: support css opacity attribute
+0.1.2: support css opacity attribute
+0.1.3: support css opacity attribute

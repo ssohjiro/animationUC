@@ -1,4 +1,4 @@
-//     animationUC.js 0.1.1
+//     animationUC.js 0.1.3
 
 //     (c) 2015 Byunghwa Yoo
 //     animationUC may be freely distributed under the MIT license.
@@ -48,7 +48,7 @@
 }( function( root, aniUC, raf, caf, easeUc, _ ) {
 
 	// Current version of the library. Keep in sync with `package.json`.
-	aniUC.VERSION = '0.1.2';
+	aniUC.VERSION = '0.1.3';
 
 	// Save the previous value of the `Backbone` variable, so that it can be
 	// restored later on, if `noConflict` is used.
@@ -154,6 +154,7 @@
 				if( key === 'opacity' ) {
 
 					if( tmpStartPos === "" ) tmpStartPos = 1;
+					else tmpStartPos = Number( tmpStartPos );
 
 				} else if( key === 'top' && tmpStartPos === 'auto' ) {
 
